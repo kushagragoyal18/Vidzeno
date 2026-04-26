@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: videoshift-postgres
+    environment:
+      POSTGRES_USER: videoshift
+      POSTGRES_PASSWORD: videoshift_password
+      POSTGRES_DB: videoshift
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U videoshift"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: videoshift-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: videoshift-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin_password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: videoshift-backend
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://videoshift:videoshift_password@postgres:5432/videoshift
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev_jwt_secret_change_in_production
+      SESSION_SECRET: dev_session_secret_change_in_production
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STORAGE_PROVIDER: local
+      UPLOAD_DIR: /app/uploads
+      MAX_FILE_SIZE_FREE: 524288000
+      MAX_FILE_SIZE_PREMIUM: 4294967296
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/worker/Dockerfile
+    container_name: videoshift-worker
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://videoshift:videoshift_password@postgres:5432/videoshift
+      REDIS_URL: redis://redis:6379
+      STORAGE_PROVIDER: local
+      UPLOAD_DIR: /app/uploads
+      OUTPUT_DIR: /app/outputs
+    volumes:
+      - ./worker:/app
+      - uploads:/app/uploads
+      - outputs:/app/outputs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  uploads:
+  outputs:

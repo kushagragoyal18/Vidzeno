@@ -1,0 +1,39 @@
+{
+  "name": "videoshift",
+  "version": "1.0.0",
+  "description": "Video conversion SaaS platform",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "worker"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:worker\"",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:worker": "npm run dev --workspace=worker",
+    "build": "npm run build --workspaces",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build:backend": "npm run build --workspace=backend",
+    "build:worker": "npm run build --workspace=worker",
+    "test": "npm run test --workspace=backend && npm run test --workspace=worker",
+    "test:backend": "npm run test --workspace=backend",
+    "test:worker": "npm run test --workspace=worker",
+    "test:coverage": "npm run test:coverage --workspace=backend && npm run test:coverage --workspace=worker",
+    "test:integration": "RUN_INTEGRATION_TESTS=true npm run test --workspace=backend",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "db:migrate": "npm run migrate --workspace=backend",
+    "db:seed": "npm run seed --workspace=backend",
+    "demo": "bash demo.sh",
+    "demo:win": "powershell -ExecutionPolicy Bypass -File demo.ps1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

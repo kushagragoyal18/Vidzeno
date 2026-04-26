@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: videoshift
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: videoshift/worker:latest
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: DATABASE_URL
+              value: postgresql://videoshift:$(DATABASE_PASSWORD)@postgres:5432/videoshift
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: STORAGE_PROVIDER
+              value: s3
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: videoshift-secrets
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: videoshift-secrets
+                  key: aws-secret-access-key
+            - name: S3_BUCKET
+              value: videoshift-uploads
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"

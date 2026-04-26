@@ -1,0 +1,78 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# .env.test is committed as a template (no real secrets)
+# .env.test.local overrides it locally
+
+# Test upload/output directories
+uploads-test/
+outputs-test/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for instrumented libs
+lib-cov/
+
+# Coverage directory
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+
+# Uploads (development)
+uploads/
+outputs/
+
+# Docker
+.docker/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+artifacts/
+
+# Misc
+.eslintcache
+
+# Database & User Backups
+.pgdata/
+users_data.sql

@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import { z } from 'zod';
@@ -31,13 +31,18 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    plan: 'free' | 'premium';
-  };
+declare global {
+  namespace Express {
+    interface User {
+      id: string;
+      name?: string;
+      email: string;
+      plan: 'free' | 'premium';
+    }
+  }
 }
+
+export interface AuthRequest extends Request {}
 
 const generateToken = (payload: object): string => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
@@ -60,7 +65,7 @@ const clearAuthCookie = (res: Response): void => {
 
 export const authMiddleware = async (
   req: AuthRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -225,7 +230,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
 });
 
 // Logout endpoint
-authRouter.post('/logout', (req: Request, res: Response) => {
+authRouter.post('/logout', (_req: Request, res: Response) => {
   clearAuthCookie(res);
   res.json({ success: true });
 });
@@ -286,12 +291,12 @@ import axios from 'axios';
 
 // ─── Real Google OAuth Flow ──────────────────────────────────────────────────
 
-authRouter.get('/google', (req: Request, res: Response) => {
+authRouter.get('/google', (_req: Request, res: Response) => {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
   const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/google/callback';
 
   if (!GOOGLE_CLIENT_ID) {
-    return res.redirect('http://localhost:5175/?error=google_not_configured');
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5175'}/?error=google_not_configured`);
   }
   const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}&response_type=code&scope=email profile`;
   res.redirect(url);
@@ -303,7 +308,7 @@ authRouter.get('/google/callback', async (req: Request, res: Response) => {
   const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/google/callback';
 
   const { code } = req.query;
-  if (!code) return res.redirect('http://localhost:5175/?error=no_code');
+  if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5175'}/?error=no_code`);
 
   try {
     // 1. Exchange code for token
@@ -343,20 +348,20 @@ authRouter.get('/google/callback', async (req: Request, res: Response) => {
     const token = generateToken({ id: user.id, email: user.email, plan: user.plan });
     setAuthCookie(res, token);
     
-    res.redirect('http://localhost:5175/');
+    res.redirect(process.env.FRONTEND_URL || 'http://localhost:5175/');
   } catch (err) {
     console.error('Google OAuth Error:', err);
-    res.redirect('http://localhost:5175/?error=google_auth_failed');
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5175'}/?error=google_auth_failed`);
   }
 });
 
 // ─── Real GitHub OAuth Flow ──────────────────────────────────────────────────
 
-authRouter.get('/github', (req: Request, res: Response) => {
+authRouter.get('/github', (_req: Request, res: Response) => {
   const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || '';
 
   if (!GITHUB_CLIENT_ID) {
-    return res.redirect('http://localhost:5175/?error=github_not_configured');
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5175'}/?error=github_not_configured`);
   }
   const url = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=user:email`;
   res.redirect(url);
@@ -367,7 +372,7 @@ authRouter.get('/github/callback', async (req: Request, res: Response) => {
   const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '';
 
   const { code } = req.query;
-  if (!code) return res.redirect('http://localhost:5175/?error=no_code');
+  if (!code) return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5175'}/?error=no_code`);
 
   try {
     // 1. Exchange code for token
@@ -411,10 +416,10 @@ authRouter.get('/github/callback', async (req: Request, res: Response) => {
     const token = generateToken({ id: user.id, email: user.email, plan: user.plan });
     setAuthCookie(res, token);
 
-    res.redirect('http://localhost:5175/');
+    res.redirect(process.env.FRONTEND_URL || 'http://localhost:5175/');
   } catch (err) {
     console.error('GitHub OAuth Error:', err);
-    res.redirect('http://localhost:5175/?error=github_auth_failed');
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5175'}/?error=github_auth_failed`);
   }
 });
 

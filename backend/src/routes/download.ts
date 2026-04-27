@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { query } from '../db/index';
 import path from 'path';
 import fs from 'fs';

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { auth, payments } from '../api';
+import { payments } from '../api';
 import toast from 'react-hot-toast';
 import UpgradeBanner from '../components/UpgradeBanner';
 
@@ -13,7 +12,6 @@ interface Subscription {
 export default function Settings() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     payments.subscription()

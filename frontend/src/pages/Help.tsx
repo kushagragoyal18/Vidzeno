@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { content } from '../api';
-import { marked } from 'marked';
 import toast from 'react-hot-toast';
 
 export default function Help() {

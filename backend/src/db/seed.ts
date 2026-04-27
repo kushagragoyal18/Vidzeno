@@ -1,5 +1,5 @@
 import { getPool, closePool } from './index';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const main = async () => {
   console.log('Seeding database...');

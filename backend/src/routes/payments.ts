@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import Stripe from 'stripe';
 import { query } from '../db/index';
 import { AuthRequest, requireAuth } from './auth';

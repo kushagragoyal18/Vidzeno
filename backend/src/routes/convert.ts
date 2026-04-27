@@ -1,7 +1,7 @@
 import { Router, Request, Response, RequestHandler } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { query, transaction } from '../db/index';
-import { AuthRequest, requireAuth, authMiddleware } from './auth';
+import { AuthRequest, authMiddleware } from './auth';
 import { addConversionJob, inMemoryJobs } from '../services/queue';
 import { runConversion } from '../services/converter';
 import { inMemoryFiles } from './upload';

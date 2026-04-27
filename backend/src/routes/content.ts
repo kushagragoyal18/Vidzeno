@@ -107,7 +107,7 @@ If you have any questions or issues, please contact us at:
 `;
 
 // Help/FAQ endpoint
-contentRouter.get('/faq', (req: Request, res: Response) => {
+contentRouter.get('/faq', (_req: Request, res: Response) => {
   const html = marked(faqData);
   res.json({
     content: faqData,

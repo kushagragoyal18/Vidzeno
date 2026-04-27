@@ -1,5 +1,4 @@
 import { spawn } from 'child_process';
-import { Readable } from 'stream';
 import ffmpegPath from 'ffmpeg-static';
 
 export interface ProgressUpdate {

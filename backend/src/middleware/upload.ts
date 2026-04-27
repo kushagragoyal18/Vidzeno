@@ -41,11 +41,11 @@ const getUploadDir = (): string => {
 
 // Storage configuration
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (_req, _file, cb) => {
     const uploadDir = getUploadDir();
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const uuid = uuidv4();
     cb(null, `${uuid}${ext}`);
@@ -54,7 +54,7 @@ const storage = multer.diskStorage({
 
 // File filter
 const fileFilter = (
-  req: Request,
+  _req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {

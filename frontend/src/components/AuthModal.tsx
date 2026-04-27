@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { useState } from 'react';
 import { auth } from '../api';
 import toast from 'react-hot-toast';

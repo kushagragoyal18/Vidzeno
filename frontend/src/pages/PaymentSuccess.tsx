@@ -3,14 +3,12 @@ import { Link } from 'react-router-dom';
 import { payments } from '../api';
 
 export default function PaymentSuccess() {
-  const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<any>(null);
 
   useEffect(() => {
     payments.subscription()
       .then(setSubscription)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .catch(console.error);
   }, []);
 
   return (

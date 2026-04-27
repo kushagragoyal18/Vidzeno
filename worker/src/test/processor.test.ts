@@ -143,7 +143,7 @@ describe('FFmpegProcessor', () => {
 
       // First spawn = ffprobe (success), second = ffmpeg (fail)
       spawn
-        .mockImplementationOnce((_cmd: string, spawnArgs: string[]) => {
+        .mockImplementationOnce((_cmd: string, _spawnArgs: string[]) => {
           const proc = new EventEmitter() as any;
           proc.stdout = new EventEmitter();
           proc.stderr = new EventEmitter();

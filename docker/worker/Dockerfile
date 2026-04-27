@@ -24,3 +24,5 @@ RUN npm run build
 RUN mkdir -p /app/uploads /app/outputs
 
 CMD ["npm", "start"]
+
+# Note: Worker doesn't expose a port - it processes jobs from the queue

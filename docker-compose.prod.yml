@@ -1,0 +1,164 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: vidzeno-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vidzeno}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-vidzeno}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vidzeno}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vidzeno-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: vidzeno-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-vidzeno_redis_password}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-vidzeno_redis_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vidzeno-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: vidzeno-backend
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vidzeno}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vidzeno}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vidzeno_redis_password}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+
+      # OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GITHUB_CALLBACK_URL: ${GITHUB_CALLBACK_URL}
+
+      # Stripe
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PRICE_ID_MONTHLY: ${STRIPE_PRICE_ID_MONTHLY}
+      STRIPE_PRICE_ID_YEARLY: ${STRIPE_PRICE_ID_YEARLY}
+
+      # Storage - DigitalOcean Spaces (S3-compatible)
+      STORAGE_PROVIDER: s3
+      AWS_ACCESS_KEY_ID: ${DO_SPACES_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${DO_SPACES_SECRET_KEY}
+      AWS_REGION: ${DO_SPACES_REGION:-us-east-1}
+      S3_BUCKET: ${DO_SPACES_BUCKET}
+      S3_UPLOAD_DIR: uploads
+      S3_OUTPUT_DIR: outputs
+      S3_ENDPOINT: ${DO_SPACES_ENDPOINT}
+
+      # File limits
+      MAX_FILE_SIZE_FREE: 524288000
+      MAX_FILE_SIZE_PREMIUM: 4294967296
+      MAX_CONVERSIONS_FREE_DAILY: 2
+
+      # Rate limiting
+      RATE_LIMIT_WINDOW_MS: 60000
+      RATE_LIMIT_MAX_REQUESTS: 10
+
+      # FFmpeg
+      FFMPEG_TIMEOUT: 600000
+      FFMPEG_WATERMARK_TEXT: "${FFMPEG_WATERMARK_TEXT:-Converted with Vidzeno (Free)}"
+    ports:
+      - "3001:3001"
+    volumes:
+      - uploads:/app/uploads
+      - outputs:/app/outputs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - vidzeno-network
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/worker/Dockerfile
+    container_name: vidzeno-worker
+    restart: always
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vidzeno}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vidzeno}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-vidzeno_redis_password}@redis:6379
+
+      # Storage - DigitalOcean Spaces (S3-compatible)
+      STORAGE_PROVIDER: s3
+      AWS_ACCESS_KEY_ID: ${DO_SPACES_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${DO_SPACES_SECRET_KEY}
+      AWS_REGION: ${DO_SPACES_REGION:-us-east-1}
+      S3_BUCKET: ${DO_SPACES_BUCKET}
+      S3_UPLOAD_DIR: uploads
+      S3_OUTPUT_DIR: outputs
+      S3_ENDPOINT: ${DO_SPACES_ENDPOINT}
+
+      UPLOAD_DIR: /app/uploads
+      OUTPUT_DIR: /app/outputs
+      FFMPEG_TIMEOUT: 600000
+    volumes:
+      - uploads:/app/uploads
+      - outputs:/app/outputs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vidzeno-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: vidzeno-frontend
+    restart: always
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    depends_on:
+      - backend
+    networks:
+      - vidzeno-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads:
+  outputs:
+
+networks:
+  vidzeno-network:
+    driver: bridge

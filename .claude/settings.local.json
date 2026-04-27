@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(npm install *)",
-      "Bash(npx jest *)"
+      "Bash(npx jest *)",
+      "Bash(chmod +x *)",
+      "Bash(openssl rand *)",
+      "Bash(ssh *)",
+      "Bash(ping -c 2 143.198.169.215)",
+      "Bash(nc -zv 143.198.169.215 22)",
+      "PowerShell(Test-NetConnection *)"
     ]
   }
 }

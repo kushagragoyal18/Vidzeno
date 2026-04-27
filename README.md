@@ -1,8 +1,8 @@
-# VideoShift
+# Vidzeno
 
 A modern, scalable video conversion SaaS platform that mimics the simplicity of ilovepdf.com. Built with React, Node.js, FFmpeg, and Redis.
 
-![VideoShift](https://img.shields.io/badge/VideoShift-v1.0.0-blue)
+![Vidzeno](https://img.shields.io/badge/vidzeno-v1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## Features
@@ -34,7 +34,7 @@ A modern, scalable video conversion SaaS platform that mimics the simplicity of 
 ## Project Structure
 
 ```
-videoshift/
+vidzeno/
 ├── backend/           # Express API server
 │   ├── src/
 │   │   ├── routes/    # API endpoints
@@ -72,7 +72,7 @@ videoshift/
 ### 1. Clone and Setup
 
 ```bash
-cd videoshift
+cd vidzeno
 cp .env.example .env
 ```
 
@@ -171,7 +171,7 @@ PORT=3001
 FRONTEND_URL=http://localhost:5173
 
 # Database
-DATABASE_URL=postgresql://videoshift:videoshift_password@localhost:5432/videoshift
+DATABASE_URL=postgresql://vidzeno:vidzeno_password@localhost:5432/vidzeno
 
 # Redis
 REDIS_URL=redis://localhost:6379
@@ -225,8 +225,8 @@ docker-compose -f docker-compose.prod.yml up -d
 ```bash
 # Create namespace and secrets
 kubectl apply -f k8s/namespace.yaml
-kubectl create secret generic videoshift-secrets \
-  --namespace=videoshift \
+kubectl create secret generic vidzeno-secrets \
+  --namespace=vidzeno \
   --from-literal=database-password='secure-password' \
   --from-literal=jwt-secret='jwt-secret' \
   --from-literal=stripe-secret-key='sk_live_xxx' \
@@ -236,7 +236,7 @@ kubectl create secret generic videoshift-secrets \
 kubectl apply -f k8s/
 
 # Run migrations
-kubectl exec -n videoshift deploy/backend -- npm run migrate
+kubectl exec -n vidzeno deploy/backend -- npm run migrate
 ```
 
 ### Heroku
@@ -244,7 +244,7 @@ kubectl exec -n videoshift deploy/backend -- npm run migrate
 ```bash
 # Install Heroku CLI
 heroku login
-heroku create videoshift-app
+heroku create vidzeno-app
 
 # Add PostgreSQL
 heroku addons:create heroku-postgresql:mini
@@ -275,7 +275,7 @@ git push heroku main
 3. Create products and prices:
    ```bash
    # Use Stripe CLI or Dashboard
-   stripe products create --name="VideoShift Premium Monthly"
+   stripe products create --name="vidzeno Premium Monthly"
    stripe prices create --product=prod_xxx --unit-amount=999 --currency=usd --recurring=interval=month
    stripe prices create --product=prod_xxx --unit-amount=7999 --currency=usd --recurring=interval=year
    ```
@@ -333,9 +333,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## Support
 
 - Documentation: `/help` route in the application
-- Email: support@videoshift.com
+- Email: support@vidzeno.com
 - Issues: GitHub Issues
 
 ---
 
-Built with ❤️ by the VideoShift Team
+Built with ❤️ by the vidzeno Team
